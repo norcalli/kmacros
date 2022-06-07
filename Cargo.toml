@@ -1,0 +1,17 @@
+[package]
+name = "kmacros"
+version = "1.0.0"
+edition = "2021"
+
+[workspace]
+members = ["kmacros_shim", "kproc_macros"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+kproc_macros = { path = "kproc_macros", version = "1.0", optional = true }
+kmacros_shim = { path = "kmacros_shim", version = "1.0" }
+
+[features]
+default = ["proc"]
+proc = ["kproc_macros"]
