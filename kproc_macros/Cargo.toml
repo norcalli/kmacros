@@ -1,6 +1,6 @@
 [package]
 name = "kproc_macros"
-version = "3.0.0"
+version = "3.0.1"
 edition = "2021"
 authors = ["Ashkan Kiani"]
 license = "MIT"
@@ -16,8 +16,8 @@ keywords = ["explain"]
 proc-macro = true
 
 [dependencies]
-proc-macro2 = "1.0.39"
-quote = "1.0.18"
+proc-macro2 = "1.0"
+quote = "1.0"
 syn = { version = "1.0", features = ["full", "extra-traits"] }
 kmacros_shim = { path = "../kmacros_shim", version = "3.0" }
 
