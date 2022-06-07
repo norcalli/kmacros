@@ -1,3 +1,3 @@
-pub use kmacros_shim::*;
+pub use kmacros_shim::{self, *};
 #[cfg(feature = "proc")]
 pub use kproc_macros::*;
