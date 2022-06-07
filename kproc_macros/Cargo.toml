@@ -2,13 +2,7 @@
 name = "kproc_macros"
 version = "1.0.0"
 edition = "2021"
-license = "MIT"
 authors = ["Ashkan Kiani"]
-description = "Useful proc macros"
-readme = "README.md"
-homepage = "https://github.com/norcalli/kmacros/"
-repository = "https://github.com/norcalli/kmacros/"
-keywords = ["explain"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

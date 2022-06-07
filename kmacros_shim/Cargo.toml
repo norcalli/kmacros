@@ -2,6 +2,11 @@
 name = "kmacros_shim"
 version = "1.0.0"
 edition = "2021"
+license = "MIT"
+description = "Useful macros"
+homepage = "https://github.com/norcalli/kmacros/"
+repository = "https://github.com/norcalli/kmacros/"
+keywords = []
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
