@@ -30,7 +30,7 @@ dependencies = [
 
 [[package]]
 name = "kmacros_shim"
-version = "1.0.0"
+version = "3.0.0"
 
 [[package]]
 name = "kproc_macros"

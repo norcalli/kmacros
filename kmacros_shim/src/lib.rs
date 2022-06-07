@@ -62,17 +62,17 @@ macro_rules! or_continue {
 /// ```
 /// use std::any::TypeId;
 /// fn check<T: 'static>(_x: T) {
-///   assert_eq!(TypeId::of::<piex::macros::HiddenVariable>(), TypeId::of::<T>());
+///   assert_eq!(TypeId::of::<kmacros_shim::HiddenVariable>(), TypeId::of::<T>());
 /// }
 /// let x = 1;
-/// piex::hide!(x);
+/// kmacros_shim::hide!(x);
 /// check(x);
 /// ```
 #[macro_export]
 macro_rules! hide {
     ($x:ident) => {
         #[allow(unused_variables)]
-        let $x = $crate::macros::HiddenVariable;
+        let $x = $crate::HiddenVariable;
     };
 }
 
