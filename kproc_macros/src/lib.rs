@@ -4,6 +4,79 @@ use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, parse_quote, ItemFn};
+mod field_iter;
+
+#[proc_macro_derive(FieldIter, attributes(field_iter))]
+/// ```rust
+/// use kproc_macros::FieldIter;
+/// use std::fmt::Debug;
+/// 
+/// #[derive(Debug, FieldIter)]
+/// /// outer
+/// #[allow(dead_code)]
+/// #[field_iter(debug_iter = "dyn std::fmt::Debug")]
+/// struct Foo<T> {
+///     x: bool,
+///     b: String,
+///     #[field_iter(skip(debug_iter))]
+///     t: T,
+/// }
+/// 
+/// #[derive(Debug, FieldIter)]
+/// /// outer
+/// #[allow(dead_code)]
+/// #[field_iter(debug_iter_mut = "dyn std::fmt::Debug")]
+/// #[field_iter(bound(debug_iter_mut = "T: Debug"))]
+/// struct Bar<T> {
+///     x: bool,
+///     b: String,
+///     t: T,
+/// }
+/// 
+/// fn main() {
+///     Foo {
+///         x: true,
+///         b: format!("Test"),
+///         t: 64u64,
+///     }
+///     .debug_iter(|name, value: &dyn Debug| {
+///         eprintln!("{name} = {value:?}");
+///         assert_eq!(
+///             format!("{value:?}"),
+///             match name {
+///                 "x" => "true",
+///                 "b" => r#""Test""#,
+///                 "t" => "64",
+///                 _ => unreachable!(),
+///             }
+///         );
+///         None::<()>
+///     });
+/// 
+///     Bar {
+///         x: true,
+///         b: format!("Test"),
+///         t: 64u64,
+///     }
+///     .debug_iter_mut(|name, value: &mut dyn Debug| {
+///         eprintln!("{name} = {value:?}");
+///         assert_eq!(
+///             format!("{value:?}"),
+///             match name {
+///                 "x" => "true",
+///                 "b" => r#""Test""#,
+///                 "t" => "64",
+///                 _ => unreachable!(),
+///             }
+///         );
+///         None::<()>
+///     });
+/// }
+/// ```
+pub fn field_iter_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    parse_macro_input!(input as field_iter::Top).to_token_stream().into()
+}
+
 
 fn has_attr(attrs: &[syn::Attribute], attr_name: &str) -> bool {
     attrs.iter().any(|a| {
@@ -239,7 +312,7 @@ pub fn explain(_attr: TokenStream, item: TokenStream) -> TokenStream {
 /// See the `tests` for more examples.
 #[proc_macro_attribute]
 pub fn optimized(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let function = parse_macro_input!(item as ItemFn);
+    let mut function = parse_macro_input!(item as ItemFn);
     assert_eq!(
         function.block.stmts.len(),
         2,
@@ -263,20 +336,19 @@ pub fn optimized(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let fast_body = parse_quote!({
         #fast_block
     });
-    rename! {
-        let mut fast_function = function;
-    }
-    let mut slow_function = fast_function.clone();
+    let mut slow_function = function.clone();
     slow_function.block = slow_body;
-    fast_function.block = fast_body;
+    function.block = fast_body;
 
     // TODO wish I could use Span::def_site() but needs nightly
-    slow_function.sig.ident = Ident::new(
-        &format!("{}_slow", fast_function.sig.ident),
-        Span::call_site(),
-    );
+    slow_function.sig.ident =
+        Ident::new(&format!("{}_slow", function.sig.ident), Span::call_site());
 
-    let params: Vec<_> = fast_function
+    let mut fast_function = function.clone();
+    fast_function.sig.ident =
+        Ident::new(&format!("{}_fast", function.sig.ident), Span::call_site());
+
+    let params: Vec<_> = function
         .sig
         .inputs
         .iter()
@@ -288,33 +360,29 @@ pub fn optimized(_attr: TokenStream, item: TokenStream) -> TokenStream {
             syn::FnArg::Receiver(receiver) => receiver.to_token_stream(),
         })
         .collect();
-    let params_types: Vec<_> = fast_function
+    let params_types: Vec<_> = function
         .sig
         .inputs
         .iter()
         .map(|arg| match arg {
-            syn::FnArg::Typed(pattype) => {
-                pattype.ty.to_token_stream()
-            }
+            syn::FnArg::Typed(pattype) => pattype.ty.to_token_stream(),
             syn::FnArg::Receiver(receiver) => {
                 if receiver.reference.is_some() {
                     parse_quote!(&Self)
                 } else {
                     parse_quote!(Self)
                 }
-            },
+            }
         })
         .collect();
     let fast_ident = &fast_function.sig.ident;
     let slow_ident = &slow_function.sig.ident;
     let fn_name = fast_ident.to_string();
-    let mut check_function = fast_function.clone();
+    let mut check_function = function.clone();
     // TODO wish I could use Span::def_site() but needs nightly
-    check_function.sig.ident = Ident::new(
-        &format!("{}_check", fast_function.sig.ident),
-        Span::call_site(),
-    );
-    check_function.block = parse_quote! ({
+    check_function.sig.ident =
+        Ident::new(&format!("{}_check", function.sig.ident), Span::call_site());
+    check_function.block = parse_quote!({
         let fast = #fast_ident(#(#params),*);
         let slow = #slow_ident(#(#params),*);
         kmacros_shim::OptimizeCheckOutput {
@@ -324,16 +392,54 @@ pub fn optimized(_attr: TokenStream, item: TokenStream) -> TokenStream {
             fast,
         }
     });
-    let fn_ret = match &fast_function.sig.output {
+    let fn_ret = match &function.sig.output {
         syn::ReturnType::Default => parse_quote!(()),
         syn::ReturnType::Type(_arrow, ty) => ty.to_token_stream(),
     };
-    check_function.sig.output = parse_quote!(-> kmacros_shim::OptimizeCheckOutput<#fn_ret, (#(#params_types),*)>);
+    check_function.sig.output =
+        parse_quote!(-> kmacros_shim::OptimizeCheckOutput<#fn_ret, (#(#params_types),*)>);
+
+    let check_ident = &check_function.sig.ident;
+    let mut checked_function = function.clone();
+    checked_function.block = parse_quote!({
+        #check_ident(#(#params),*).assert_equal()
+    });
+
+    // #[cfg(not(check_optimizations))]
+    // (quote! {
+    //     #function
+    //     #[cfg(test)]
+    //     #fast_function
+    //     #[cfg(test)]
+    //     #slow_function
+    //     #[cfg(test)]
+    //     #check_function
+    // })
+    // .into()
+
+    // #[cfg(feature = "check_optimizations")]
+    // (quote! {
+    //     #checked_function
+    //     #[cfg(test)]
+    //     #fast_function
+    //     #[cfg(test)]
+    //     #slow_function
+    //     #[cfg(test)]
+    //     #check_function
+    // })
+    // .into()
 
     (quote! {
+        #[cfg(not(feature = "check_optimizations"))]
+        #function
+        #[allow(dead_code)]
         #fast_function
+        #[allow(dead_code)]
         #slow_function
+        #[allow(dead_code)]
         #check_function
+        #[cfg(feature = "check_optimizations")]
+        #checked_function
     })
     .into()
 }
