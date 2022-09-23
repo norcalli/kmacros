@@ -84,7 +84,7 @@ pub struct OptimizeCheckOutput<T, P> {
 }
 
 impl<T, P> OptimizeCheckOutput<T, P> {
-    pub fn assert_equal(self)
+    pub fn assert_equal(self) -> T
     where
         T: PartialEq + std::fmt::Debug,
         P: std::fmt::Debug,
@@ -95,7 +95,11 @@ impl<T, P> OptimizeCheckOutput<T, P> {
             slow,
             fast,
         } = self;
-        assert_eq!(slow, fast, "For function {function_name:?} with params {params:?}");
+        assert_eq!(
+            slow, fast,
+            "For function {function_name:?} with params {params:?}"
+        );
+        fast
     }
 }
 
