@@ -1,6 +1,6 @@
 [package]
 name = "kproc_macros"
-version = "5.0.0"
+version = "5.1.0"
 edition = "2021"
 authors = ["Ashkan Kiani"]
 license = "MIT"
@@ -19,7 +19,7 @@ proc-macro = true
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "1.0", features = ["full", "extra-traits"] }
-kmacros_shim = { path = "../kmacros_shim", version = "5.0" }
+kmacros_shim = { path = "../kmacros_shim", version = "5.1" }
 
 [[test]]
 name = "tests"
