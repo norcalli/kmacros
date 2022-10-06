@@ -4,6 +4,8 @@ pub use clearable::*;
 pub use kmacros_shim::{self, *};
 #[cfg(feature = "proc")]
 pub use kproc_macros::*;
+#[cfg(feature = "kinds")]
+pub use enum_kinds::{self, EnumKind};
 
 pub struct OptimizeCheckOutput<T, P> {
     pub function_name: &'static str,
