@@ -27,3 +27,4 @@ path = "tests/progress.rs"
 
 [dev-dependencies]
 trybuild = { version = "1.0.49", features = ["diff"] }
+kmacros =  { path = "../", version = "5.1" }

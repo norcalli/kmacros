@@ -190,9 +190,9 @@ impl ToTokens for Top {
         } = self;
 
         quote! {
-            impl #abga ::kmacros_shim::Clearable for #ident #abga #where_clause {
+            impl #abga ::kmacros::Clearable for #ident #abga #where_clause {
                 fn clear(&mut self) {
-                    #(::kmacros_shim::Clearable::clear(&mut self.#fields);)*
+                    #(::kmacros::Clearable::clear(&mut self.#fields);)*
                     #(self.#default_fields = Default::default();)*
                     #(#expressions;)*
                 }

@@ -36,6 +36,7 @@ version = "5.1.0"
 name = "kproc_macros"
 version = "5.1.0"
 dependencies = [
+ "kmacros",
  "kmacros_shim",
  "proc-macro2",
  "quote",

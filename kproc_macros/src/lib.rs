@@ -4,14 +4,14 @@ use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, parse_quote, ItemFn};
-mod field_iter;
 mod clearable;
+mod field_iter;
 
 #[proc_macro_derive(FieldIter, attributes(field_iter))]
 /// ```rust
 /// use kproc_macros::FieldIter;
 /// use std::fmt::Debug;
-/// 
+///
 /// #[derive(Debug, FieldIter)]
 /// /// outer
 /// #[allow(dead_code)]
@@ -22,7 +22,7 @@ mod clearable;
 ///     #[field_iter(skip(debug_iter))]
 ///     t: T,
 /// }
-/// 
+///
 /// #[derive(Debug, FieldIter)]
 /// /// outer
 /// #[allow(dead_code)]
@@ -33,7 +33,7 @@ mod clearable;
 ///     b: String,
 ///     t: T,
 /// }
-/// 
+///
 /// fn main() {
 ///     Foo {
 ///         x: true,
@@ -53,7 +53,7 @@ mod clearable;
 ///         );
 ///         None::<()>
 ///     });
-/// 
+///
 ///     Bar {
 ///         x: true,
 ///         b: format!("Test"),
@@ -75,15 +75,17 @@ mod clearable;
 /// }
 /// ```
 pub fn field_iter_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    parse_macro_input!(input as field_iter::Top).to_token_stream().into()
+    parse_macro_input!(input as field_iter::Top)
+        .to_token_stream()
+        .into()
 }
-
 
 #[proc_macro_derive(Clearable, attributes(clearable))]
 pub fn clearable_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    parse_macro_input!(input as clearable::Top).to_token_stream().into()
+    parse_macro_input!(input as clearable::Top)
+        .to_token_stream()
+        .into()
 }
-
 
 fn has_attr(attrs: &[syn::Attribute], attr_name: &str) -> bool {
     attrs.iter().any(|a| {
@@ -392,7 +394,7 @@ pub fn optimized(_attr: TokenStream, item: TokenStream) -> TokenStream {
     check_function.block = parse_quote!({
         let fast = #fast_ident(#(#params),*);
         let slow = #slow_ident(#(#params),*);
-        kmacros_shim::OptimizeCheckOutput {
+        ::kmacros::OptimizeCheckOutput {
             function_name: #fn_name,
             params: (#(#params),*),
             slow,
@@ -403,8 +405,9 @@ pub fn optimized(_attr: TokenStream, item: TokenStream) -> TokenStream {
         syn::ReturnType::Default => parse_quote!(()),
         syn::ReturnType::Type(_arrow, ty) => ty.to_token_stream(),
     };
-    check_function.sig.output =
-        parse_quote!(-> kmacros_shim::OptimizeCheckOutput<#fn_ret, (#(#params_types),*)>);
+    check_function.sig.output = parse_quote! {
+        -> ::kmacros::OptimizeCheckOutput<#fn_ret, (#(#params_types),*)>
+    };
 
     let check_ident = &check_function.sig.ident;
     let mut checked_function = function.clone();

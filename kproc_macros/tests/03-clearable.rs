@@ -1,6 +1,4 @@
-use kproc_macros::Clearable;
-
-#[derive(Clearable)]
+#[derive(kmacros::Clearable)]
 pub struct Foo {
     a: Vec<i32>,
     #[clearable(skip)]
@@ -18,7 +16,7 @@ pub struct Foo {
 }
 
 fn main() {
-    use kmacros_shim::Clearable;
+    use kmacros::Clearable;
     let mut foo = Foo {
         a: vec![1, 2, 3],
         b: 3,
