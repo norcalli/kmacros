@@ -22,7 +22,7 @@ checksum = "112c678d4050afce233f4f2852bb2eb519230b3cf12f33585275537d7e41578d"
 
 [[package]]
 name = "kmacros"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "kmacros_shim",
  "kproc_macros",
@@ -30,11 +30,11 @@ dependencies = [
 
 [[package]]
 name = "kmacros_shim"
-version = "4.0.0"
+version = "5.0.0"
 
 [[package]]
 name = "kproc_macros"
-version = "4.0.0"
+version = "5.0.0"
 dependencies = [
  "kmacros_shim",
  "proc-macro2",
