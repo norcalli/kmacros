@@ -1,3 +1,6 @@
+pub mod clearable;
+pub use clearable::*;
+
 pub struct HiddenVariable;
 /// ```
 /// use std::any::TypeId;

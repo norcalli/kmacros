@@ -5,6 +5,7 @@ use proc_macro2::{Ident, Span};
 use quote::{quote, ToTokens};
 use syn::{parse_macro_input, parse_quote, ItemFn};
 mod field_iter;
+mod clearable;
 
 #[proc_macro_derive(FieldIter, attributes(field_iter))]
 /// ```rust
@@ -75,6 +76,12 @@ mod field_iter;
 /// ```
 pub fn field_iter_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     parse_macro_input!(input as field_iter::Top).to_token_stream().into()
+}
+
+
+#[proc_macro_derive(Clearable, attributes(clearable))]
+pub fn clearable_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    parse_macro_input!(input as clearable::Top).to_token_stream().into()
 }
 
 

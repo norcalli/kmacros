@@ -21,3 +21,4 @@ kmacros_shim = { path = "kmacros_shim", version = "4.0" }
 [features]
 default = ["proc"]
 proc = ["kproc_macros"]
+no_std = ["kmacros_shim/no_std"]
