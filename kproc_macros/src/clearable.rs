@@ -46,6 +46,7 @@ pub struct Top {
     where_clause: Option<syn::WhereClause>,
     fields: Vec<Ident>,
     default_fields: Vec<Ident>,
+    expressions: Vec<syn::Expr>,
 }
 
 impl Parse for Top {
@@ -73,6 +74,7 @@ impl Parse for Top {
 
         let raw_fields = input.parse::<syn::FieldsNamed>()?;
         let mut default_fields = vec![];
+        let mut expressions = vec![];
         let fields = raw_fields
             .named
             .iter()
@@ -94,6 +96,33 @@ impl Parse for Top {
                                             if p.is_ident("default") =>
                                         {
                                             default_fields.push(field.clone());
+                                            return None;
+                                        }
+                                        syn::NestedMeta::Meta(syn::Meta::NameValue(
+                                            syn::MetaNameValue {
+                                                path,
+                                                eq_token: _,
+                                                lit: syn::Lit::Str(expr),
+                                            },
+                                        )) if path.is_ident("expr") => {
+                                            let expr = expr
+                                                .value()
+                                                .replace("{}", &format!("self.{}", field));
+                                            let expr: syn::Expr =
+                                                syn::parse_str(&expr).expect("Invalid expression");
+                                            expressions.push(expr);
+                                            return None;
+                                        }
+                                        syn::NestedMeta::Meta(syn::Meta::NameValue(
+                                            syn::MetaNameValue {
+                                                path,
+                                                eq_token: _,
+                                                lit: syn::Lit::Str(expr),
+                                            },
+                                        )) if path.is_ident("raw_expr") => {
+                                            let expr: syn::Expr = syn::parse_str(&expr.value())
+                                                .expect("Invalid expression");
+                                            expressions.push(expr);
                                             return None;
                                         }
                                         syn::NestedMeta::Meta(meta)
@@ -143,6 +172,7 @@ impl Parse for Top {
             where_clause,
             fields,
             default_fields,
+            expressions,
         })
     }
 }
@@ -156,6 +186,7 @@ impl ToTokens for Top {
             where_clause,
             fields,
             default_fields,
+            expressions,
         } = self;
 
         quote! {
@@ -163,10 +194,10 @@ impl ToTokens for Top {
                 fn clear(&mut self) {
                     #(::kmacros_shim::Clearable::clear(&mut self.#fields);)*
                     #(self.#default_fields = Default::default();)*
+                    #(#expressions;)*
                 }
             }
         }
         .to_tokens(tokens);
     }
 }
-
