@@ -45,5 +45,9 @@ fn main() {
     foo.a.clear();
     assert_eq!(foo.a, vec![]);
     assert_eq!(foo.b, 3);
+    foo.a.push(1);
+    assert_eq!(foo.a.cleared().get(0), None);
+    foo.a.push(1);
+    assert_eq!(foo.a.cleared_if(false).get(0), Some(&1));
 }
 

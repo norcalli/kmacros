@@ -1,5 +1,17 @@
 pub trait Clearable {
     fn clear(&mut self);
+
+    fn cleared(&mut self) -> &mut Self {
+        self.clear();
+        self
+    }
+
+    fn cleared_if(&mut self, clear: bool) -> &mut Self {
+        if clear {
+            self.clear();
+        }
+        self
+    }
 }
 
 #[cfg(not(feature = "no_std"))]
